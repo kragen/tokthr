@@ -1,4 +1,7 @@
-all: tokthr tokthr-symbols tokthr-disassembly
+all = tokthr tokthr-symbols tokthr-disassembly
+all: $(all)
+clean:
+	rm -f $(all) *~ .*~
 tokthr: tokthr.S
 	gcc -m32 -nostdlib -static -o $@ $<
 tokthr-symbols: tokthr

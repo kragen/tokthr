@@ -10,8 +10,13 @@
 # As of version 2, this program just outputs the following under
 # Linux:
 # hell, world, hello
-# -120 3 104 
-# 102 101 100 
+# -120 1 104 
+# s: 102 101 100 
+# 397 
+# lit8 lit ret execute (if) (else) (loop) ! @ c! c@ rp@ rp! r> >r sp@ sp! pop dup over swap 0< & | ^ um+ /% um* r@ syscall5 syscall3 syscall1 bye 0 1 type hello world comma count cr -1 + 1- rot -rot tuck emit u. (u.) ((u.)) ~ 1+ negate . scolon .s pick cells * depth - / cellsize nip (do) i 2dup 2drop dict dictp dictsize nextword pastdict? words < >= 0= cbcmp c@+ bcmp memcmp unloop find r2@ 2swap 
+# hello134517863 
+# , 0 
+# 134517710 
 
 # to compile:   
 # gcc -m32 -nostdlib -static -o tokthr2 tokthr2.S
@@ -138,7 +143,22 @@
 # whether it is in the range of bytecodes whose interpretations
 # are in native code, and picks the relevant code path.  This
 # avoids consuming any space per-word for this distinction, but with
-# what I assume is a heavy performance cost.
+# what appears to be a heavy performance cost.
+
+# This is similar to an approach called "bit threading"; as
+# explained by Jeff Fox in a comp.lang.forth message
+# 2007-05-13, on thread "Cases where Forth seems a little
+# clunky":
+
+#       I have seen hardware and software implemenations of
+#       bit-threading where the msb of the address space
+#       selects between threaded code address lists and
+#       addresses of CODE subroutines. In both cases 0 is a
+#       valid address and negative addresses are valid. I think
+#       this applied to Novix.
+
+# Except that this approach uses a fraction of a bit for most
+# tokens instead of a whole bit.
 
 ### How Small This Is
 
@@ -149,26 +169,26 @@
 # As of version 3, the machine-code part of this interpreter is
 # 239 bytes in 129 machine-code instructions, plus 19 bytes of
 # read-only data, 172 bytes of token table for the 86
-# currently-defined words, 397 bytes of their names, and
-# another 370 bytes of bytecode in those words (including a
-# couple of data values scattered around), and then another 56
-# bytes in the main program, for a total of 1253 bytes.  So the
-# program is already less than half written in assembly, in
-# terms of object-code size.
+# currently-defined words (30 of which are primitive), 397
+# bytes of their names, and another 370 bytes of bytecode in
+# the 56 bytecode words (including a couple of data values
+# scattered around), and then another 56 bytes in the main
+# program, for a total of 1253 bytes.  So the program is
+# already less than half written in assembly, in terms of
+# object-code size.
 
-# As of version 2, the machine-code part of this program uses
+# As of version 3, the machine-code part of this program uses
 # only 25 different instructions: cld; jmp, jz, jnc, jbe; push,
 # pop, lodsb, lodsl, xchg, mov; cmp, movsbl, inc, and, xor, or,
 # lea, cdq, rcl, add, idiv, imul; and int.  Interestingly, many
 # of them are only used once.
 
-# Just before version 3, the composition of the non-comment lines was
-# 14% assembler macros, 51% assembly language, and 35% bytecode.
+# Just before version 3, the non-comment lines were 14%
+# assembler macros, 51% assembly language, and 35% bytecode.
 
 # From Brad Rodriguez's January/February 1993 Computer Journal
 # article, "Moving Forth: Part 1: Design Decisions in the Forth
 # Kernel":
-
 #       You can expect the usual 16-bit Forth kernel (see below)
 #       to occupy about 8K bytes of program space. For a full
 #       kernel that can compile Forth definitions, you should
@@ -176,7 +196,51 @@
 
 # I'm pretty sure I can beat the 8K requirement by quite a bit
 # and still be able to compile Forth definitions --- I'm hoping
-# for a factor of 4.
+# for a factor of 4.  Consider, from Jeff Fox's "Thoughtful
+# Programming", chapter 3: http://www.ultratechnology.com/forth3.htm
+
+#       People assume that since Chuck has refined his Forth down to
+#       about a 1K object that this means he has just stripped his
+#       Forth down to a 1K kernel that will boot like in the old days
+#       and that he is going to compile a complete Forth system on top
+#       of the 1K before he starts an application. This is wrong. The
+#       complete Forth system is 1K, and the reason for that is
+#       maximize Chuck's productivity. What stops people from doing
+#       what they need to do to solve a problem is all the time spend
+#       solving all the related sub-problems that pop up as a result
+#       of complex interconnections between components. To maximize
+#       his productivity Chuck minimizes the number of these side
+#       problems that pop up. Keep it simple, and don't get to where
+#       you are spending 90% or 99% or you time dealing with related
+#       sub-problems. Avoid unsolvable problems, don't waste your time
+#       trying to solve them.
+
+# Consider also this quote from Elizabeth Rather:
+
+#       As you have seen, so much depends on the specific
+#       machine architecture. We implemented a TTC [token
+#       threaded] Forth on some low-end AVR processors with
+#       very limited code space, and it ran faster than a
+#       native-code 8051 at comparable clock speed.
+
+# (2007-06-23 comp.lang.forth post on thread "Build your own
+# Forth for Microchip PIC (Episode 838): Threading")
+# http://objectmix.com/forth/168105-build-your-own-forth-microchip-pic-episode-838-threading.html
+
+# Consider also this quote from the abstract of Frank
+# Sergeant's 1991 "A 3-Instruction Forth for Embedded Systems
+# Work: Illustrated on the Motorola MC68HC11":
+
+#       A 3- instruction Forth makes Forth affordable for
+#       target systems with very limited memory. It can be
+#       brought up quickly on strange new hardware. You don't
+#       have to do without Forth because of memory or time
+#       limitations. It only takes 66 bytes for the Motorola
+#       MC68HC11. Full source is provided. . . . The absolute
+#       minimum the target must do, it seems to me, is fetch a
+#       byte, store a byte, and call a subroutine.
+
+# http://pygmy.utoh.org/3ins4th.html
 
 # As I said before, there are no small, cheap 386s, and so of
 # course the code size of this version is an approximation, and
@@ -243,20 +307,37 @@
 # slower than direct-threading with a simple bytecode
 # indirection layer.
 
+# I would be surprised if version 3 had any measurable change
+# in speed from version 2.
+
+# To version 3, I added a little loop to repeatedly search the
+# 86-word wordlist for ", ", which isn't there.  I was able to
+# do this search 10 000 times in 4.59 CPU seconds, which is
+# 5.34 microseconds per comparison, or about 3700 CPU cycles.
+# If we eventually have 300 words in the wordlist, each search
+# will therefore take 1.6 milliseconds in the worst case, so
+# the system won't be able to compile or interpret more than
+# about 50-100 lines of code per second.  It should probably be
+# pretty easy to fix this particular performance problem
+# (recode wordlist search in asm, restructure, or whatever) if
+# it comes up, but it's a bit worrisome...
+
 ### What's Wrong With This Program
 
 # - It's a long way from doing anything useful.
 # - There's 21 instructions of unused code which may be broken.
-#   In Version 2, these words are in use and so probably work:
+#   In Version 3, these words are in use and so probably work:
 #   hello, sub1, type, comma, world, newline, dolit_s8, dot,
 #   bye, exit, branch_on_0, c_bang, drop, dup, swap, negative,
 #   umplus, divmod, syscall5, syscall3, zero, syscall1, rpop,
 #   rpush, one, dolit_32, neg1, add, emit, tuck, udot,
 #   udot_nospc, udot_nonzero, branch, invert, add1, negate,
 #   xor, printstack, cells, mul, depth, div, sub, cellsize,
-#   nip, pick, twodup, i, _do, r_at, over, at, sp_at, bang.
-#   These are not tested, and therefore may be broken: execute,
-#   c_at, rp_at, rp_bang, sp_bang, and, or.
+#   nip, pick, twodup, i, _do, r_at, over, at, sp_at, bang,
+#   twoswap, r_2at, find, unloop, memcmp, bcmp, c_at_inc,
+#   cbcmp, zeq, ge, lt, words, pastdict, nextword, dictsize,
+#   dictp, dict, c_at.  These are not tested, and therefore may be
+#   broken: execute, rp_at, rp_bang, sp_bang, and, or.
 # - There's no dictionary structure yet.
 # - It probably needs another couple of primitives.
 # - There's no checking for stack overflow or underflow, but
@@ -948,25 +1029,101 @@ dictionary_pointer:
 	.byte b_twodrop, b_zero, b_exit
         # this should probably go with the other do loop stuff
 	def unloop, "unloop", b_rpop, b_rpop, b_rpop, b_twodrop, b_rpush
-        
-	defbytes find, "find"
-        .byte b_rpush, b_rpush, b_dict
-1:      .byte b_dup, b_r_2at, b_cbcmp, b_zeq
-        fif 2f                  # bcmp 0= if
-        .byte b_rpop, b_rpop, b_twodrop, b_exit
-2:      .byte b_nextword, b_dup, b_pastdict
-        fif 1b
-        .byte b_rpop, b_rpop, b_twodrop, b_drop, b_zero, b_exit
 
-        ## XXX "find" is actually returning the WRONG THING.
-        ## It needs to return the index at which the thing was found.
-        ## But I will fix that when it is not 4 AM.
+        # FIND: ( c-addr u -- token 1 | 0 )
 	
+        # 30 bytes; jonesforth 42's asm version is 56 bytes.  It's
+	# fairly directly comparable, although jonesforth's FIND has
+	# to do bit-masking and includes its own inline NEXTWORD and
+	# CBCMP, which are actually fairly large here.
+	
+	defbytes find, "find"
+        .byte b_rpush, b_rpush, b_zero, b_dict
+1:      .byte b_dup, b_r_2at, b_cbcmp, b_zeq            # start loop
+        fif 2f                  # bcmp 0= if
+        .byte b_rpop, b_rpop, b_twodrop, b_drop, b_one, b_exit
+2:      .byte b_swap, b_add1, b_swap, b_nextword, b_dup, b_pastdict
+        fif 1b
+        .byte b_rpop, b_rpop, b_twodrop, b_twodrop, b_zero, b_exit
+
         # copy two cells from return stack
         defbytes r_2at, "r2@"
         .byte b_rpop, b_rpop, b_r_at, b_over, b_rpush, b_rot, b_rpush, b_exit
         # ( a b c d -- c d a b )
 	def twoswap, "2swap", b_rpush, b_unrot, b_rpop, b_unrot
+
+	.macro create, name
+        defbytes \name, "\name"
+        .byte b_dolit_32
+        .int 1f
+        .byte b_exit
+1:      
+        .endm
+        
+        create "tib"
+        _tibmax = 80
+        .space _tibmax
+        defbytes tibmax, "tibmax"
+        .byte b_dolit_32
+        .int _tibmax
+        .byte b_exit
+        create "tibsize"
+        .int 0
+
+        defbytes fgets, "fgets"
+        .byte b_tib, b_tibmax, b_read, b_tibsize, b_bang # XXX handle errors
+        .byte b_tib, b_tibsize, b_at, b_exit
+	def gets, "gets", b_zero, b_fgets
+
+        defbytes read, "read"
+        .byte b_rpush, b_rpush, b_dolit_s8,__NR_read
+        .byte b_zero             # fd 0: stdin
+        .byte b_rpop, b_rpop, b_syscall3, b_exit
+
+        def bl, "bl", b_dolit_s8,32 # space, blank
+
+        # parse parses out a token of input from a string and leaves
+	# the token's address and length atop the stack
+        # ( c-addr u -- c-addr+n u-n c-addr2 u2 )
+        defbytes parse, "parse"
+	.byte b_skipwhitespace
+        ##  XXX finish him!
+	.byte b_exit
+
+        defbytes skipwhitespace, "-wsp"
+1:      .byte b_dup, b_zeq
+        fif 3f                  # return empty tail
+        .byte b_exit
+3:      .byte b_sub1, b_swap, b_c_at_inc, b_whitespace
+        fif 2f                  # escape loop if not whitespace
+        .byte b_swap
+        felse 1b
+2:      .byte b_sub1, b_swap, b_add1, b_exit
+
+        ## costs 9+5 bytes
+	def_counted_string wsps, " \n\t"
+        defbytes whitespace, "wsp"
+        .byte b_dup, b_bl, b_xor
+        fif 1f
+        .byte b_dup, b_dolit_s8,'\n, b_xor
+        fif 1f
+        .byte b_dup, b_dolit_s8,'\t, b_xor
+        fif 1f
+        .byte b_drop, b_zero, b_exit
+1:      .byte b_drop, b_one, b_exit
+
+#         def repl, "repl", b_gets, b_eval, b_exit
+
+#         defbytes eval, "eval"
+# 2:      .byte b_parse
+#         .byte b_dup, b_zeq
+#         fif 3f                  # escape from loop
+#         .byte b_rot, b_rpush, b_rot, b_rpush, b_find
+#         fif 1f
+#         .byte b_execute
+# 1:      .byte b_rpop, b_rpop
+#         felse 2b
+# 3:      .byte b_2drop, b_2drop, b_exit
 
         .data 3
 instructions:
@@ -988,9 +1145,15 @@ instructions:
 	# test dictsize
 	.byte b_dictsize, b_dot, b_cr
         .byte b_words, b_cr
-	.byte b_hello, b_twodup, b_type, b_find, b_dot, b_cr
-        .byte b_comma, b_twodup, b_type, b_find, b_dot, b_cr
+	.byte b_hello, b_twodup, b_type, b_find, b_printstack
+        .byte b_comma, b_twodup, b_type, b_find, b_printstack
         .byte b_dict, b_dot, b_cr
+	.byte b_dolit_s8, '?, b_emit, b_bl, b_emit, b_gets, b_twodup
+        .byte b_zero, b__do
+1:      .byte b_c_at_inc, b_whitespace, b_dot
+        floop 1b
+        .byte b_drop
+        .byte b_skipwhitespace, b_type
         .byte b_bye
 
         # At end of the assembly program, we initialize the

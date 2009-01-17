@@ -1,0 +1,49 @@
+2007-11-16  Kragen Javier Sitaker  <kragen@thrifty>
+
+	* Changelog: added.
+
+	* tokthr2.S: added read, gets, fgets, tib, tibmax, tibsize, asm
+	macro 'create'.  Now we can read input.  Added fif, floop, felse
+	macros to calculate jump offsets for me; no more miscalculated
+	jump offsets yielding puzzling bugs.
+
+	* Makefile: somewhere along the line added this.
+
+2007-11-15  Kragen Javier Sitaker  <kragen@thrifty>
+
+	* tokthr2.S: Bumped version from 2 to 3.  Added run-time
+	dictionary of names.  Moved "instructions" (main program) to end
+	of file.  For dictionary handling, added count, cr, words, dict,
+	dictp, dictsize, nextwords, pastdict?, <, >=, 0=, cbcmp, c@+,
+	bcmp, memcmp, unloop, find, r2@, 2swap.  Added "s: " label to .s
+	output.
+
+2007-11-12..14  Kragen Javier Sitaker  <kragen@thrifty>
+
+	* tokthr2.S: Added "version 2", many comments.  Wrote
+	define_bytecode, defasm, defbytes macros so I can stop writing
+	bytecode numerically.  Shortened tail end of primitives with
+	pusheax and pushedxeax.  Changed execute to execute a token.
+	Implemented DO LOOP.  Removed direct threading, switched to a
+	variant of "bit threading".  Added make_counted_string macro and
+	words that will later be called -1 + 1- rot -rot tuck emit u. (u.)
+	((u.)) ~ 1+ negate . printstack pick cells * depth - / cellsize
+	nip i 2dup.
+
+	* .gdbinit: somewhere along the line added this.
+
+2007-11-11  Kragen Javier Sitaker  <kragen@thrifty>
+
+	tokthr.S: Tried out various things to see if they could shrink the
+	machine code.
+
+2007-11-10  Kragen Javier Sitaker  <kragen@thrifty>
+
+	* tokthr.S: Have most of the basic primitives and have written a
+	little bit of bytecode, but nothing that does anything
+	interesting.
+
+2007-11-09  Kragen Javier Sitaker  <kragen@thrifty>
+
+	* tokthr.S: Prototyped four-instruction token-threaded "next"
+	routine and wrote hello-world program with it.

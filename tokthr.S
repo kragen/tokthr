@@ -10,13 +10,8 @@
 # As of version 2, this program just outputs the following under
 # Linux:
 # hell, world, hello
-# -120 1 104 
-# s: 102 101 100 
-# 397 
-# lit8 lit ret execute (if) (else) (loop) ! @ c! c@ rp@ rp! r> >r sp@ sp! pop dup over swap 0< & | ^ um+ /% um* r@ syscall5 syscall3 syscall1 bye 0 1 type hello world comma count cr -1 + 1- rot -rot tuck emit u. (u.) ((u.)) ~ 1+ negate . scolon .s pick cells * depth - / cellsize nip (do) i 2dup 2drop dict dictp dictsize nextword pastdict? words < >= 0= cbcmp c@+ bcmp memcmp unloop find r2@ 2swap 
-# hello134517863 
-# , 0 
-# 134517710 
+# -120 3 104 
+# 102 101 100 
 
 # to compile:   
 # gcc -m32 -nostdlib -static -o tokthr2 tokthr2.S
@@ -161,22 +156,24 @@
 # program is already less than half written in assembly, in
 # terms of object-code size.
 
-# As of version 3, the machine-code part of this program uses
+# As of version 2, the machine-code part of this program uses
 # only 25 different instructions: cld; jmp, jz, jnc, jbe; push,
 # pop, lodsb, lodsl, xchg, mov; cmp, movsbl, inc, and, xor, or,
 # lea, cdq, rcl, add, idiv, imul; and int.  Interestingly, many
 # of them are only used once.
 
-# Just before version 3, the non-comment lines were 14%
-# assembler macros, 51% assembly language, and 35% bytecode.
+# Just before version 3, the composition of the non-comment lines was
+# 14% assembler macros, 51% assembly language, and 35% bytecode.
 
 # From Brad Rodriguez's January/February 1993 Computer Journal
 # article, "Moving Forth: Part 1: Design Decisions in the Forth
 # Kernel":
+
 #       You can expect the usual 16-bit Forth kernel (see below)
 #       to occupy about 8K bytes of program space. For a full
 #       kernel that can compile Forth definitions, you should
 #       allow a minimum of 1K byte of RAM.
+
 # I'm pretty sure I can beat the 8K requirement by quite a bit
 # and still be able to compile Forth definitions --- I'm hoping
 # for a factor of 4.
@@ -246,25 +243,20 @@
 # slower than direct-threading with a simple bytecode
 # indirection layer.
 
-# I would be surprised if version 3 had any measurable change
-# in speed from version 2.
-
 ### What's Wrong With This Program
 
 # - It's a long way from doing anything useful.
 # - There's 21 instructions of unused code which may be broken.
-#   In Version 3, these words are in use and so probably work:
+#   In Version 2, these words are in use and so probably work:
 #   hello, sub1, type, comma, world, newline, dolit_s8, dot,
 #   bye, exit, branch_on_0, c_bang, drop, dup, swap, negative,
 #   umplus, divmod, syscall5, syscall3, zero, syscall1, rpop,
 #   rpush, one, dolit_32, neg1, add, emit, tuck, udot,
 #   udot_nospc, udot_nonzero, branch, invert, add1, negate,
 #   xor, printstack, cells, mul, depth, div, sub, cellsize,
-#   nip, pick, twodup, i, _do, r_at, over, at, sp_at, bang,
-#   twoswap, r_2at, find, unloop, memcmp, bcmp, c_at_inc,
-#   cbcmp, zeq, ge, lt, words, pastdict, nextword, dictsize,
-#   dictp, dict, c_at.  These are not tested, and therefore may be
-#   broken: execute, rp_at, rp_bang, sp_bang, and, or.
+#   nip, pick, twodup, i, _do, r_at, over, at, sp_at, bang.
+#   These are not tested, and therefore may be broken: execute,
+#   c_at, rp_at, rp_bang, sp_bang, and, or.
 # - There's no dictionary structure yet.
 # - It probably needs another couple of primitives.
 # - There's no checking for stack overflow or underflow, but

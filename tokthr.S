@@ -19,7 +19,7 @@
 # 134517710 
 
 # to compile:   
-# gcc -m32 -nostdlib -static -o tokthr2 tokthr2.S
+# gcc -m32 -nostdlib -static -o tokthr tokthr.S
 
 
 ### Why Small Things are Interesting

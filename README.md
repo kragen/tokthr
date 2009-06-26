@@ -1,7 +1,7 @@
 tokthr
 ======
 
-**That’s the longest “hello world” I’ve *ever seen*!** -- [Bob Appleyard] [0]
+> That’s the longest “hello world” I’ve *ever seen*! -- [Bob Appleyard] [0]
 
 This is a tiny token-threaded Forth interpreter that I started in 2007
 and haven’t finished yet.  It’s about 1000 lines of x86 assembly,

@@ -124,11 +124,11 @@
 # %ebp --- return stack pointer; points to last thing pushed.  This stack, 
 #          like the other one, grows downwards.
 # %esp --- data stack pointer; points to last thing pushed.  This is
-#  	   the processor's standard stack pointer; "push" and "pop"
-#  	   instructions use it, which makes assembly code to use it
-#  	   quite concise.  The Intel "call" and "ret" instructions
-#  	   would also use this stack, but they aren't used in this
-#  	   program.
+#          the processor's standard stack pointer; "push" and "pop"
+#          instructions use it, which makes assembly code to use it
+#          quite concise.  The Intel "call" and "ret" instructions
+#          would also use this stack, but they aren't used in this
+#          program.
 # flags --- the "down" direction flag must be cleared.
 
 # It's probably missing a couple of primitives needed because of
@@ -445,13 +445,13 @@ dictionary:
 initial_return_stack_pointer:   
 
 ### Initialization
-        	
+                
         .text                   # the following stuff goes in the text segment
         .global _start          # declare _start as a global symbol 
                                 # (otherwise ld won't be able to find it)
 _start:                         # this is the entry point for ELF I guess
         cld                     # clear direction flag; unnecessary?
-	mov $initial_return_stack_pointer, %ebp
+        mov $initial_return_stack_pointer, %ebp
         mov $instructions, %esi # %esi is the interpreter pointer register
         jmp next                # and now we start the interpreter.
                                 # (somewhat silly since we could just
@@ -473,7 +473,7 @@ machine_code_primitives:
 
         defasm dolit_32, "lit"  # more general dolit
         lodsl
-	jmp pusheax
+        jmp pusheax
         
         defasm exit, "ret"      # Return from a colon defn.
         xchg %ebp, %esp
@@ -499,7 +499,7 @@ machine_code_primitives:
         lodsb
         movsbl %al, %eax        # same insn size as cbtw; cwde
         add %eax, %esi
-        jmp next	
+        jmp next        
 
 # (loop) is what we do at the end of a DO LOOP.
 
@@ -557,8 +557,8 @@ machine_code_primitives:
         defasm c_at, "c@"
         pop %ebx
         xor %eax, %eax
-	mov (%ebx), %al
-	jmp pusheax
+        mov (%ebx), %al
+        jmp pusheax
         
 # Get the return stack pointer.
         defasm rp_at, "rp@"
@@ -572,10 +572,10 @@ machine_code_primitives:
         
 # Pop the return stack to the data stack
         defasm rpop, "r>"
-	xchg %esp, %ebp
+        xchg %esp, %ebp
         pop %eax
-	xchg %esp, %ebp
-	jmp pusheax
+        xchg %esp, %ebp
+        jmp pusheax
         
 # Push the return stack from the data stack
         defasm rpush, ">r"
@@ -603,7 +603,7 @@ machine_code_primitives:
 # reasons: on the 8086, SP got decremented prior to the fetch,
 # and also wasn't valid as a base or index register.
         defasm dup, "dup"
-	pop %eax
+        pop %eax
         push %eax
         jmp pusheax
         
@@ -617,7 +617,7 @@ machine_code_primitives:
         defasm swap, "swap"
         pop %edx
         pop %eax
-#	jmp pushedxeax       fall through because pushedxeax is next
+#       jmp pushedxeax       fall through because pushedxeax is next
 
 # pusheax and pushedxeax: a prologue to 'next' that first pushes %edx
 # and %eax, or just %eax.
@@ -630,7 +630,7 @@ pushedxeax:
 pusheax:        
         push %eax
         # now we fall through to 'next'
-        	
+                
 # "next" fetches the next bytecode and runs it.  It's placed
 # here in the middle of the bytecode definitions so that more
 # of them can use the short two-byte jump form to get to it.
@@ -670,19 +670,19 @@ next_primitive:
         pop %eax
         pop %ebx
         and %ebx, %eax
-	jmp pusheax
+        jmp pusheax
 
         defasm or, "|"
         pop %eax
         pop %ebx
         or %ebx, %eax
-	jmp pusheax
+        jmp pusheax
 
         defasm xor, "^"
         pop %eax
         pop %ebx
         xor %ebx, %eax
-	jmp pusheax
+        jmp pusheax
         
 # add two unsigned numbers, returning sum and carry.
 # ( u1 u2 -- u3 cy )
@@ -692,7 +692,7 @@ next_primitive:
         pop %ebx
         add %ebx, %edx
         rcl $1, %eax
-	jmp pushedxeax
+        jmp pushedxeax
 
 # Divide double-precision by single-precision, unsigned (?).
 # UM/MOD from eForth.  ( udl udh un -- ur uq )
@@ -701,7 +701,7 @@ next_primitive:
         pop %edx
         pop %eax
         idiv %ebx
-	jmp pushedxeax
+        jmp pushedxeax
 
 # Multiply two single-precision numbers, giving a double-
 # precision result. ( d1 d2 -- udl udh )
@@ -750,7 +750,7 @@ next_primitive:
         pop %eax
         int $0x80
         mov -4(%ebp), %esi
-	jmp pusheax
+        jmp pusheax
 
         last_asm_bytecode = b_syscall5
 
@@ -759,17 +759,17 @@ next_primitive:
         ## Because after I left off b_exit once, I wasted a long
         ## time trying to figure out what was wrong, so I use this when I can:
         .macro def name, realname, bytes:vararg
-	defbytes \name, "\realname"
+        defbytes \name, "\realname"
         .byte \bytes
         .byte b_exit
         .endm
         ## Macros for conditional branch and loop:
         ## Because I am tired of tracking down bugs due to 
         ## getting the jump offsets wrong.
-	.macro fif, target      # if, or end of while loop
+        .macro fif, target      # if, or end of while loop
         .byte b_branch_on_0, \target - . - 1
         .endm
-	.macro floop, target    # do loop
+        .macro floop, target    # do loop
         .byte b__loop, \target - . - 1
         .endm
         .macro felse, target    # else, unconditional jump
@@ -785,7 +785,7 @@ bytecode_start:
         def bye, "bye", b_dolit_s8,__NR_exit, b_zero, b_syscall1 # exit program
         def zero, "0", b_dolit_s8,0            # push 0
         def one, "1", b_dolit_s8,1
-	
+        
 # This word outputs a string whose address and count are on 
 # the stack.  ( b u -- )
 
@@ -864,16 +864,16 @@ emit_buffer:
         fif 1f
         .byte b_udot_nonzero, b_exit
 1:      .byte b_drop, b_dolit_s8, '0, b_emit, b_exit
-	defbytes udot_nonzero, "((u.))"
-	.byte b_zero, b_dolit_s8,10, b_divmod # divide by 10
+        defbytes udot_nonzero, "((u.))"
+        .byte b_zero, b_dolit_s8,10, b_divmod # divide by 10
         .byte b_dup
         fif 2f                  # recurse if nonzero
         .byte b_udot_nonzero
-	felse 3f
+        felse 3f
 2:      .byte b_drop            # drop zero quotient
 3:      .byte b_dolit_s8, '0, b_add, b_emit # print digit
-	.byte b_exit
-	
+        .byte b_exit
+        
 ### Add signed numeric output, ".".  This cost 20 bytes plus 8 bytes
 # of overhead, but added some fundamental numeric operations; only 12
 # of those 28 bytes are specific to "."
@@ -902,7 +902,7 @@ emit_buffer:
 # code would only be 22 bytes in 7 instructions, if there were a
 # way to just CALL the "." routine from machine code, which
 # there isn't.
-	
+        
 # However, the words added were  cells * - / cellsize nip (do)
 # (loop) 2dup  which are all generally useful, and  
 # depth pick .s  which are more special-purpose.
@@ -968,9 +968,9 @@ bottom_of_stack:
 #   - c@+ for iterating over memory.
 # That's 17 new words, averaging 8.2 bytecodes each.
 
-dictionary_pointer:     	
+dictionary_pointer:             
         .int end_of_dictionary
-	defbytes dict, "dict"
+        defbytes dict, "dict"
         .byte b_dolit_32
         .int dictionary
         .byte b_exit
@@ -991,7 +991,7 @@ dictionary_pointer:
         def lt, "<", b_sub, b_negative
         def ge, ">=", b_lt, b_zeq
         # logical not: return true for 0, false (0) otherwise
-	defbytes zeq, "0="
+        defbytes zeq, "0="
         fif 1f
         .byte b_zero, b_exit
 1:      .byte b_neg1, b_exit
@@ -1012,7 +1012,7 @@ dictionary_pointer:
         def c_at_inc, "c@+", b_dup, b_add1, b_swap, b_c_at
         # Keep in mind memcmp() in libc is only 30 bytes long.
         # This bcmp is a little different from C memcmp or bcmp in
-	# that it compares two lengths.
+        # that it compares two lengths.
         defbytes bcmp, "bcmp" # ( c-addr1 u1 c-addr2 u2 -- n )
         .byte b_rot, b_over, b_xor
         fif 3f
@@ -1026,18 +1026,18 @@ dictionary_pointer:
         .byte b_unrot, b_twodrop, b_unloop, b_exit
 1:      .byte b_drop, b_swap
         floop 2b
-	.byte b_twodrop, b_zero, b_exit
+        .byte b_twodrop, b_zero, b_exit
         # this should probably go with the other do loop stuff
-	def unloop, "unloop", b_rpop, b_rpop, b_rpop, b_twodrop, b_rpush
+        def unloop, "unloop", b_rpop, b_rpop, b_rpop, b_twodrop, b_rpush
 
         # FIND: ( c-addr u -- token 1 | 0 )
-	
+        
         # 30 bytes; jonesforth 42's asm version is 56 bytes.  It's
-	# fairly directly comparable, although jonesforth's FIND has
-	# to do bit-masking and includes its own inline NEXTWORD and
-	# CBCMP, which are actually fairly large here.
-	
-	defbytes find, "find"
+        # fairly directly comparable, although jonesforth's FIND has
+        # to do bit-masking and includes its own inline NEXTWORD and
+        # CBCMP, which are actually fairly large here.
+        
+        defbytes find, "find"
         .byte b_rpush, b_rpush, b_zero, b_dict
 1:      .byte b_dup, b_r_2at, b_cbcmp, b_zeq            # start loop
         fif 2f                  # bcmp 0= if
@@ -1050,9 +1050,9 @@ dictionary_pointer:
         defbytes r_2at, "r2@"
         .byte b_rpop, b_rpop, b_r_at, b_over, b_rpush, b_rot, b_rpush, b_exit
         # ( a b c d -- c d a b )
-	def twoswap, "2swap", b_rpush, b_unrot, b_rpop, b_unrot
+        def twoswap, "2swap", b_rpush, b_unrot, b_rpop, b_unrot
 
-	.macro create, name
+        .macro create, name
         defbytes \name, "\name"
         .byte b_dolit_32
         .int 1f
@@ -1073,7 +1073,7 @@ dictionary_pointer:
         defbytes fgets, "fgets"
         .byte b_tib, b_tibmax, b_read, b_tibsize, b_bang # XXX handle errors
         .byte b_tib, b_tibsize, b_at, b_exit
-	def gets, "gets", b_zero, b_fgets
+        def gets, "gets", b_zero, b_fgets
 
         defbytes read, "read"
         .byte b_rpush, b_rpush, b_dolit_s8,__NR_read
@@ -1083,12 +1083,12 @@ dictionary_pointer:
         def bl, "bl", b_dolit_s8,32 # space, blank
 
         # parse parses out a token of input from a string and leaves
-	# the token's address and length atop the stack
+        # the token's address and length atop the stack
         # ( c-addr u -- c-addr+n u-n c-addr2 u2 )
         defbytes parse, "parse"
-	.byte b_skipwhitespace
+        .byte b_skipwhitespace
         ##  XXX finish him!
-	.byte b_exit
+        .byte b_exit
 
         defbytes skipwhitespace, "-wsp"
 1:      .byte b_dup, b_zeq
@@ -1101,7 +1101,7 @@ dictionary_pointer:
 2:      .byte b_sub1, b_swap, b_add1, b_exit
 
         ## costs 9+5 bytes
-	def_counted_string wsps, " \n\t"
+        def_counted_string wsps, " \n\t"
         defbytes whitespace, "wsp"
         .byte b_dup, b_bl, b_xor
         fif 1f
@@ -1127,7 +1127,7 @@ dictionary_pointer:
 
         .data 3
 instructions:
-	# And here is the actual "main program" in that bytecode.
+        # And here is the actual "main program" in that bytecode.
         .byte b_sp_at, b_dolit_32
         .int bottom_of_stack    # variable to remember initial stack bottom
         .byte b_bang            # initialize that variable
@@ -1137,18 +1137,18 @@ instructions:
         .byte b_comma, b_type, b_world, b_type # ", world"
         .byte b_comma, b_type, b_hello, b_type, b_cr
         # test the "dot" command to print out numbers
-	.byte b_dolit_s8, -120, b_dot
-	# test positive numbers and "depth" command
+        .byte b_dolit_s8, -120, b_dot
+        # test positive numbers and "depth" command
         .byte b_dolit_s8, 104, b_depth, b_dot, b_dot, b_cr
-	# test printstack
-	.byte b_dolit_s8,100, b_dolit_s8,101, b_dolit_s8,102, b_printstack
-	# test dictsize
-	.byte b_dictsize, b_dot, b_cr
+        # test printstack
+        .byte b_dolit_s8,100, b_dolit_s8,101, b_dolit_s8,102, b_printstack
+        # test dictsize
+        .byte b_dictsize, b_dot, b_cr
         .byte b_words, b_cr
-	.byte b_hello, b_twodup, b_type, b_find, b_printstack
+        .byte b_hello, b_twodup, b_type, b_find, b_printstack
         .byte b_comma, b_twodup, b_type, b_find, b_printstack
         .byte b_dict, b_dot, b_cr
-	.byte b_dolit_s8, '?, b_emit, b_bl, b_emit, b_gets, b_twodup
+        .byte b_dolit_s8, '?, b_emit, b_bl, b_emit, b_gets, b_twodup
         .byte b_zero, b__do
 1:      .byte b_c_at_inc, b_whitespace, b_dot
         floop 1b
@@ -1157,7 +1157,7 @@ instructions:
         .byte b_bye
 
         # At end of the assembly program, we initialize the
-	# end_of_dictionary pointer by putting it at the end of the
-	# assembled .dictionary section:
+        # end_of_dictionary pointer by putting it at the end of the
+        # assembled .dictionary section:
         .section .dictionary
 end_of_dictionary:      
